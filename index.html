@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bubble Shooter Arcade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+            font-family: 'Fredoka', 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100dvh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #f8fafc;
+        }
+        #game-shell {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            height: 100dvh;
+            max-height: 860px;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 27, 75, 0.95) 100%);
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(148, 163, 184, 0.15);
+            overflow: hidden;
+        }
+        @media (min-width: 520px) and (min-height: 760px) {
+            #game-shell {
+                height: 94dvh;
+                border-radius: 28px;
+                box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(99, 102, 241, 0.35), 0 0 40px rgba(79, 70, 229, 0.2);
+            }
+        }
+        #canvas-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .arcade-btn {
+            background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+            border: 2px solid #7dd3fc;
+            box-shadow: 0 6px 0 #0369a1, 0 12px 20px rgba(2, 132, 199, 0.45);
+            transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
+        }
+        .arcade-btn:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+        .arcade-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0369a1, 0 6px 12px rgba(2, 132, 199, 0.35);
+        }
+        .arcade-btn-emerald {
+            background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+            border: 2px solid #6ee7b7;
+            box-shadow: 0 6px 0 #047857, 0 12px 20px rgba(5, 150, 105, 0.45);
+        }
+        .arcade-btn-emerald:active {
+            box-shadow: 0 2px 0 #047857, 0 6px 12px rgba(5, 150, 105, 0.35);
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(-1deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        .title-float {
+            animation: floatSlow 3.2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-shell">
+    <!-- Top HUD Bar -->
+    <header class="z-20 flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-indigo-500/20 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <!-- Score Display -->
+            <div class="bg-slate-900/90 border border-slate-700/70 rounded-xl px-3 py-1 min-w-[92px]">
+                <div class="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold leading-tight">Score</div>
+                <div id="hud-score" class="text-lg font-bold text-white leading-tight tabular-nums">0</div>
+            </div>
+            <!-- High Score Display -->
+            <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl px-3 py-1 min-w-[92px]">
+                <div class="text-[10px] uppercase tracking-wider text-amber-300 font-semibold leading-tight">Best</div>
+                <div id="hud-best" class="text-lg font-bold text-amber-200 leading-tight tabular-nums">0</div>
+            </div>
+        </div>
+
+        <!-- Shot Warning Indicator & Audio Controls -->
+        <div class="flex items-center gap-2">
+            <!-- Shots until ceiling drop pips -->
+            <div class="bg-slate-900/90 border border-slate-700/70 rounded-xl px-2.5 py-1 flex flex-col items-center" title="Shots left before new row drops">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Row Drop</span>
+                <div id="shot-pips" class="flex items-center gap-1 mt-0.5">
+                    <!-- 6 pips rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- Swap Button (Mobile/Click friendly) -->
+            <button id="btn-swap-hud" type="button" aria-label="Swap Bubble" title="Swap Bubble (Spacebar)"
+                class="p-2.5 rounded-xl bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-200 active:scale-95 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                </svg>
+            </button>
+
+            <!-- Mute Toggle -->
+            <button id="btn-mute" type="button" aria-label="Toggle Sound" title="Mute / Unmute"
+                class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/70 text-slate-200 active:scale-95 transition">
+                <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                </svg>
+                <svg id="icon-sound-off" class="w-5 h-5 hidden text-rose-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Interactive Canvas Area -->
+    <div id="canvas-wrapper">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- MENU OVERLAY -->
+        <div id="menu-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/75 backdrop-blur-md transition-opacity duration-300">
+            <div class="title-float text-center mb-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold tracking-wider uppercase mb-3">
+                    Arcade Hex Edition
+                </div>
+                <h1 class="text-5xl sm:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-sky-200 to-indigo-400 drop-shadow-[0_4px_16px_rgba(56,189,248,0.45)]">
+                    BUBBLE<br>BLITZ
+                </h1>
+            </div>
+
+            <!-- Decorative Glossy Orbs -->
+            <div class="flex items-center justify-center gap-3 mb-7">
+                <span class="w-7 h-7 rounded-full bg-gradient-to-br from-rose-300 via-rose-500 to-rose-800 shadow-lg shadow-rose-500/40 border border-white/40"></span>
+                <span class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-200 via-amber-400 to-amber-700 shadow-lg shadow-amber-500/40 border border-white/40"></span>
+                <span class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-300 via-emerald-500 to-emerald-800 shadow-lg shadow-emerald-500/40 border border-white/40"></span>
+                <span class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 via-sky-500 to-sky-800 shadow-lg shadow-sky-500/40 border border-white/40"></span>
+                <span class="w-7 h-7 rounded-full bg-gradient-to-br from-fuchsia-300 via-fuchsia-500 to-fuchsia-800 shadow-lg shadow-fuchsia-500/40 border border-white/40"></span>
+            </div>
+
+            <!-- High Score Card -->
+            <div class="glass-panel rounded-2xl px-6 py-3 mb-7 text-center w-full max-w-[260px]">
+                <div class="text-xs uppercase tracking-widest text-amber-300/90 font-semibold">High Score</div>
+                <div id="menu-high-score" class="text-3xl font-bold text-white mt-0.5 tabular-nums">0</div>
+            </div>
+
+            <!-- Play CTA -->
+            <button id="btn-play" type="button" class="arcade-btn w-full max-w-[260px] py-4 px-8 rounded-2xl text-2xl font-bold text-white tracking-wide cursor-pointer">
+                PLAY GAME
+            </button>
+
+            <!-- Compact Controls Hint -->
+            <div class="mt-7 text-center text-xs text-slate-300/80 space-y-1 max-w-[280px]">
+                <p><span class="text-sky-300 font-semibold">Aim & Shoot:</span> Move mouse or drag & release</p>
+                <p><span class="text-amber-300 font-semibold">Swap Bubble:</span> Tap cannon or press <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-[11px]">Space</kbd></p>
+            </div>
+        </div>
+
+        <!-- GAME OVER / VICTORY OVERLAY -->
+        <div id="gameover-overlay" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <div class="glass-panel rounded-3xl p-7 w-full max-w-[320px] text-center shadow-2xl border border-indigo-400/25">
+                <div id="end-badge" class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    Danger Line Crossed
+                </div>
+                <h2 id="end-title" class="text-4xl font-bold text-white mb-5">GAME OVER</h2>
+
+                <div class="space-y-3 mb-6">
+                    <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-700/70">
+                        <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Final Score</div>
+                        <div id="end-score" class="text-3xl font-bold text-sky-300 tabular-nums">0</div>
+                    </div>
+                    <div class="bg-slate-900/90 rounded-2xl p-3 border border-amber-500/30 flex items-center justify-between px-5">
+                        <span class="text-xs uppercase tracking-wider text-amber-300 font-semibold">Best Score</span>
+                        <span id="end-best" class="text-xl font-bold text-amber-200 tabular-nums">0</span>
+                    </div>
+                </div>
+
+                <button id="btn-restart" type="button" class="arcade-btn arcade-btn-emerald w-full py-3.5 px-6 rounded-2xl text-xl font-bold text-white tracking-wide cursor-pointer">
+                    PLAY AGAIN
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * ============================================================================
+ * BUBBLE SHOOTER ARCADE - COMPLETE ENGINE
+ * ============================================================================
+ */
+
+(function () {
+    'use strict';
+
+    class SoundEngine {
+        constructor() {
+            this.ctx = null;
+            this.muted = false;
+        }
+
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    this.ctx = new AudioCtx();
+                }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(() => {});
+            }
+        }
+
+        toggleMute() {
+            this.muted = !this.muted;
+            return this.muted;
+        }
+
+        playShoot() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(240, now);
+            osc.frequency.exponentialRampToValueAtTime(620, now + 0.11);
+
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.13);
+        }
+
+        playBounce() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(520, now);
+            osc.frequency.exponentialRampToValueAtTime(340, now + 0.06);
+
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.07);
+        }
+
+        playSnap() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(190, now);
+            osc.frequency.exponentialRampToValueAtTime(110, now + 0.07);
+
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.08);
+        }
+
+        playSwap() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(380, now);
+            osc.frequency.setValueAtTime(540, now + 0.05);
+
+            gain.gain.setValueAtTime(0.11, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        }
+
+        playPop(index, comboMultiplier = 1) {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime + (index * 0.025);
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            const baseFreq = 360 * Math.pow(1.065, Math.min(index, 14)) * (1 + (comboMultiplier - 1) * 0.12);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(baseFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.45, now + 0.09);
+
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.11);
+        }
+
+        playDropCluster(count) {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            const steps = Math.min(4, Math.max(2, count));
+            for (let i = 0; i < steps; i++) {
+                const now = this.ctx.currentTime + i * 0.055;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(notes[i], now);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.19);
+            }
+        }
+
+        playRowShift() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(65, now + 0.22);
+
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        }
+
+        playGameOver(isWin) {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const freqs = isWin ? [523.25, 659.25, 783.99, 1046.5] : [349.23, 311.13, 277.18, 220.0];
+            freqs.forEach((f, idx) => {
+                const now = this.ctx.currentTime + idx * 0.12;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = isWin ? 'triangle' : 'sawtooth';
+                osc.frequency.setValueAtTime(f, now);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            });
+        }
+    }
+
+    const BUBBLE_COLORS = [
+        { id: 0, name: 'Ruby',     light: '#fda4af', main: '#f43f5e', dark: '#881337', glow: 'rgba(244, 63, 94, 0.55)' },
+        { id: 1, name: 'Amber',    light: '#fde68a', main: '#f59e0b', dark: '#78350f', glow: 'rgba(245, 158, 11, 0.55)' },
+        { id: 2, name: 'Emerald',  light: '#6ee7b7', main: '#10b981', dark: '#064e3b', glow: 'rgba(16, 185, 129, 0.55)' },
+        { id: 3, name: 'Sapphire', light: '#7dd3fc', main: '#0ea5e9', dark: '#0c4a6e', glow: 'rgba(14, 165, 233, 0.55)' },
+        { id: 4, name: 'Amethyst', light: '#f0abfc', main: '#d946ef', dark: '#701a75', glow: 'rgba(217, 70, 239, 0.55)' },
+        { id: 5, name: 'Tangerine',light: '#fdba74', main: '#f97316', dark: '#7c2d12', glow: 'rgba(249, 115, 22, 0.55)' }
+    ];
+
+    const STATES = {
+        MENU: 'MENU',
+        AIMING: 'AIMING',
+        SHOOTING: 'SHOOTING',
+        RESOLVING: 'RESOLVING',
+        GAME_OVER: 'GAME_OVER'
+    };
+
+    const EVEN_COLS = 10;
+    const ODD_COLS = EVEN_COLS - 1;
+    const MAX_ROWS = 15;
+    const INITIAL_ROWS = 6;
+    const SHOTS_PER_DROP = 6;
+    const SIN_60 = 0.8660254;
+    const MIN_ANGLE = -80 * (Math.PI / 180);
+    const MAX_ANGLE =  80 * (Math.PI / 180);
+
+    const wrapper = document.getElementById('canvas-wrapper');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const hudScoreEl = document.getElementById('hud-score');
+    const hudBestEl = document.getElementById('hud-best');
+    const shotPipsEl = document.getElementById('shot-pips');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const menuHighScoreEl = document.getElementById('menu-high-score');
+    const gameoverOverlay = document.getElementById('gameover-overlay');
+    const endBadgeEl = document.getElementById('end-badge');
+    const endTitleEl = document.getElementById('end-title');
+    const endScoreEl = document.getElementById('end-score');
+    const endBestEl = document.getElementById('end-best');
+
+    const btnPlay = document.getElementById('btn-play');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnMute = document.getElementById('btn-mute');
+    const btnSwapHud = document.getElementById('btn-swap-hud');
+    const iconSoundOn = document.getElementById('icon-sound-on');
+    const iconSoundOff = document.getElementById('icon-sound-off');
+
+    const sound = new SoundEngine();
+
+    let gameState = STATES.MENU;
+    let width = 360;
+    let height = 640;
+    let dpr = 1;
+
+    let bubbleDiameter = 36;
+    let bubbleRadius = 18;
+    let rowHeight = bubbleDiameter * SIN_60;
+    let offsetX = 18;
+    let offsetY = 24;
+    let dangerLineY = 500;
+    let cannonX = 180;
+    let cannonY = 580;
+    let nextBubbleX = 105;
+    let nextBubbleY = 592;
+    let bulletSpeed = 1150;
+
+    let grid = [];
+    let aimAngle = 0;
+    let activeBubble = null;
+    let nextColorId = 0;
+    let swapAnimProgress = 0;
+
+    let score = 0;
+    let highScore = 0;
+    let comboCount = 0;
+    let shotsWithoutPop = 0;
+    let isPointerDown = false;
+    let screenShake = 0;
+
+    let particles = [];
+    let fallingBubbles = [];
+    let floatingTexts = [];
+    let lastTimestamp = 0;
+
+    try {
+        const saved = localStorage.getItem('bubble_blitz_highscore');
+        if (saved) highScore = parseInt(saved, 10) || 0;
+    } catch (e) {
+        highScore = 0;
+    }
+
+    function getColsForRow(row) {
+        return (row % 2 === 1) ? ODD_COLS : EVEN_COLS;
+    }
+
+    function gridToScreen(row, col) {
+        const x = offsetX + (col * bubbleDiameter) + (row % 2 === 1 ? bubbleRadius : 0);
+        const y = offsetY + (row * rowHeight);
+        return { x, y };
+    }
+
+    function getHexNeighbors(row, col) {
+        const isOdd = (row % 2 === 1);
+        const offsets = isOdd
+            ? [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]]
+            : [[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]];
+
+        const neighbors = [];
+        for (let i = 0; i < offsets.length; i++) {
+            const nr = row + offsets[i][0];
+            const nc = col + offsets[i][1];
+            if (nr >= 0 && nr < MAX_ROWS) {
+                const maxCols = getColsForRow(nr);
+                if (nc >= 0 && nc < maxCols) {
+                    neighbors.push({ row: nr, col: nc });
+                }
+            }
+        }
+        return neighbors;
+    }
+
+    function createEmptyGrid() {
+        const g = [];
+        for (let r = 0; r < MAX_ROWS; r++) {
+            const cols = getColsForRow(r);
+            g.push(new Array(cols).fill(null));
+        }
+        return g;
+    }
+
+    function resizeCanvas() {
+        const rect = wrapper.getBoundingClientRect();
+        width = Math.max(280, rect.width);
+        height = Math.max(420, rect.height);
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const sidePadding = Math.max(8, width * 0.025);
+        const playableWidth = width - sidePadding * 2;
+        bubbleDiameter = playableWidth / EVEN_COLS;
+        bubbleRadius = bubbleDiameter / 2;
+        rowHeight = bubbleDiameter * SIN_60;
+
+        offsetX = sidePadding + bubbleRadius;
+        offsetY = bubbleRadius + 10;
+
+        cannonX = width / 2;
+        cannonY = height - Math.max(54, bubbleDiameter * 1.55);
+        dangerLineY = cannonY - bubbleDiameter * 1.65;
+
+        nextBubbleX = cannonX - Math.min(95, width * 0.23);
+        nextBubbleY = cannonY + 10;
+
+        bulletSpeed = Math.max(950, height * 1.85);
+
+        if (activeBubble && gameState === STATES.AIMING) {
+            activeBubble.x = cannonX;
+            activeBubble.y = cannonY;
+        }
+    }
+
+    function updateHUD() {
+        hudScoreEl.textContent = score.toLocaleString();
+        hudBestEl.textContent = highScore.toLocaleString();
+        menuHighScoreEl.textContent = highScore.toLocaleString();
+
+        const remaining = SHOTS_PER_DROP - shotsWithoutPop;
+        shotPipsEl.innerHTML = '';
+        for (let i = 0; i < SHOTS_PER_DROP; i++) {
+            const pip = document.createElement('span');
+            const isActive = i < remaining;
+            let colorClass = 'bg-slate-700';
+            if (isActive) {
+                if (remaining <= 2) colorClass = 'bg-rose-500 shadow-[0_0_6px_#f43f5e]';
+                else if (remaining <= 4) colorClass = 'bg-amber-400';
+                else colorClass = 'bg-emerald-400';
+            }
+            pip.className = `w-2 h-2 rounded-full transition-all duration-200 ${colorClass}`;
+            shotPipsEl.appendChild(pip);
+        }
+    }
+
+    function saveHighScore() {
+        if (score > highScore) {
+            highScore = score;
+            try {
+                localStorage.setItem('bubble_blitz_highscore', String(highScore));
+            } catch (e) {}
+        }
+    }
+
+    function getActiveBoardColors() {
+        const present = new Set();
+        for (let r = 0; r < MAX_ROWS; r++) {
+            for (let c = 0; c < grid[r].length; c++) {
+                if (grid[r][c] !== null) {
+                    present.add(grid[r][c].colorId);
+                }
+            }
+        }
+        return present.size > 0 ? Array.from(present) : BUBBLE_COLORS.map(c => c.id);
+    }
+
+    function pickSmartColor(useBoardColorsOnly = true) {
+        const pool = useBoardColorsOnly ? getActiveBoardColors() : BUBBLE_COLORS.map(c => c.id);
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function spawnBubbleInCannon(colorId) {
+        activeBubble = {
+            colorId: colorId,
+            x: cannonX,
+            y: cannonY,
+            vx: 0,
+            vy: 0
+        };
+    }
+
+    function startNewGame() {
+        sound.init();
+        grid = createEmptyGrid();
+        particles = [];
+        fallingBubbles = [];
+        floatingTexts = [];
+
+        score = 0;
+        comboCount = 0;
+        shotsWithoutPop = 0;
+        aimAngle = 0;
+        screenShake = 0;
+
+        const numColors = BUBBLE_COLORS.length;
+        for (let r = 0; r < INITIAL_ROWS; r++) {
+            const cols = getColsForRow(r);
+            for (let c = 0; c < cols; c++) {
+                let colorId = Math.floor(Math.random() * numColors);
+                if (c > 0 && grid[r][c - 1] && Math.random() < 0.35) {
+                    colorId = grid[r][c - 1].colorId;
+                }
+                grid[r][c] = {
+                    colorId,
+                    scale: 1,
+                    bounceOffset: 0
+                };
+            }
+        }
+
+        const firstColor = pickSmartColor(true);
+        nextColorId = pickSmartColor(true);
+        spawnBubbleInCannon(firstColor);
+
+        menuOverlay.classList.add('hidden');
+        gameoverOverlay.classList.add('hidden');
+        gameState = STATES.AIMING;
+        updateHUD();
+    }
+
+    function swapActiveAndNext() {
+        if (gameState !== STATES.AIMING || !activeBubble) return;
+        const temp = activeBubble.colorId;
+        activeBubble.colorId = nextColorId;
+        nextColorId = temp;
+        swapAnimProgress = 1.0;
+        sound.playSwap();
+    }
+
+    function updateAimFromClientCoords(clientX, clientY) {
+        if (gameState !== STATES.AIMING && gameState !== STATES.MENU) return;
+        const rect = canvas.getBoundingClientRect();
+        const px = clientX - rect.left;
+        const py = clientY - rect.top;
+
+        const dx = px - cannonX;
+        const dy = py - cannonY;
+
+        let angle = Math.atan2(dx, -dy);
+        if (dy > -15) {
+            angle = dx < 0 ? MIN_ANGLE : MAX_ANGLE;
+        }
+        aimAngle = Math.max(MIN_ANGLE, Math.min(MAX_ANGLE, angle));
+    }
+
+    function fireBubble() {
+        if (gameState !== STATES.AIMING || !activeBubble) return;
+        sound.playShoot();
+        activeBubble.x = cannonX;
+        activeBubble.y = cannonY;
+        activeBubble.vx = Math.sin(aimAngle) * bulletSpeed;
+        activeBubble.vy = -Math.cos(aimAngle) * bulletSpeed;
+        gameState = STATES.SHOOTING;
+    }
+
+    function computeAimTrajectory() {
+        const points = [{ x: cannonX, y: cannonY }];
+        let rx = cannonX;
+        let ry = cannonY;
+        let vx = Math.sin(aimAngle);
+        let vy = -Math.cos(aimAngle);
+
+        const leftWall = bubbleRadius + 2;
+        const rightWall = width - bubbleRadius - 2;
+        const topWall = offsetY;
+        const stepSize = bubbleRadius * 0.45;
+        const maxSteps = 160;
+        const hitDistSq = Math.pow((bubbleRadius * 2) * 0.90, 2);
+
+        for (let step = 0; step < maxSteps; step++) {
+            rx += vx * stepSize;
+            ry += vy * stepSize;
+
+            if (rx <= leftWall) {
+                rx = leftWall + (leftWall - rx);
+                vx = -vx;
+                points.push({ x: leftWall, y: ry });
+            } else if (rx >= rightWall) {
+                rx = rightWall - (rx - rightWall);
+                vx = -vx;
+                points.push({ x: rightWall, y: ry });
+            }
+
+            if (ry <= topWall) {
+                points.push({ x: rx, y: topWall });
+                break;
+            }
+
+            let hitBubble = false;
+            for (let r = 0; r < MAX_ROWS; r++) {
+                const cols = getColsForRow(r);
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c] !== null) {
+                        const pos = gridToScreen(r, c);
+                        const dx = rx - pos.x;
+                        const dy = ry - pos.y;
+                        if (dx * dx + dy * dy < hitDistSq) {
+                            hitBubble = true;
+                            break;
+                        }
+                    }
+                }
+                if (hitBubble) break;
+            }
+
+            if (hitBubble) {
+                points.push({ x: rx, y: ry });
+                break;
+            }
+        }
+
+        return points;
+    }
+
+    function findNearestEmptyCell(impactX, impactY) {
+        let bestCell = null;
+        let bestDistSq = Infinity;
+
+        for (let r = 0; r < MAX_ROWS; r++) {
+            const cols = getColsForRow(r);
+            for (let c = 0; c < cols; c++) {
+                if (grid[r][c] !== null) continue;
+
+                let hasAnchorNeighbor = (r === 0);
+                if (!hasAnchorNeighbor) {
+                    const neighbors = getHexNeighbors(r, c);
+                    for (let i = 0; i < neighbors.length; i++) {
+                        const n = neighbors[i];
+                        if (grid[n.row][n.col] !== null) {
+                            hasAnchorNeighbor = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasAnchorNeighbor) continue;
+
+                const pos = gridToScreen(r, c);
+                const dx = impactX - pos.x;
+                const dy = impactY - pos.y;
+                const distSq = dx * dx + dy * dy;
+
+                if (distSq < bestDistSq) {
+                    bestDistSq = distSq;
+                    bestCell = { row: r, col: c };
+                }
+            }
+        }
+        return bestCell;
+    }
+
+    function findMatchingCluster(startRow, startCol) {
+        const targetColor = grid[startRow][startCol].colorId;
+        const visited = new Set();
+        const cluster = [];
+        const queue = [{ row: startRow, col: startCol }];
+        visited.add(`${startRow},${startCol}`);
+
+        while (queue.length > 0) {
+            const curr = queue.shift();
+            cluster.push(curr);
+
+            const neighbors = getHexNeighbors(curr.row, curr.col);
+            for (let i = 0; i < neighbors.length; i++) {
+                const n = neighbors[i];
+                const key = `${n.row},${n.col}`;
+                if (!visited.has(key) && grid[n.row][n.col] !== null) {
+                    if (grid[n.row][n.col].colorId === targetColor) {
+                        visited.add(key);
+                        queue.push(n);
+                    }
+                }
+            }
+        }
+        return cluster;
+    }
+
+    function findFloatingIslands() {
+        const connectedToCeiling = new Set();
+        const queue = [];
+
+        const topCols = getColsForRow(0);
+        for (let c = 0; c < topCols; c++) {
+            if (grid[0][c] !== null) {
+                const key = `0,${c}`;
+                connectedToCeiling.add(key);
+                queue.push({ row: 0, col: c });
+            }
+        }
+
+        while (queue.length > 0) {
+            const curr = queue.shift();
+            const neighbors = getHexNeighbors(curr.row, curr.col);
+            for (let i = 0; i < neighbors.length; i++) {
+                const n = neighbors[i];
+                const key = `${n.row},${n.col}`;
+                if (!connectedToCeiling.has(key) && grid[n.row][n.col] !== null) {
+                    connectedToCeiling.add(key);
+                    queue.push(n);
+                }
+            }
+        }
+
+        const floaters = [];
+        for (let r = 0; r < MAX_ROWS; r++) {
+            const cols = getColsForRow(r);
+            for (let c = 0; c < cols; c++) {
+                if (grid[r][c] !== null && !connectedToCeiling.has(`${r},${c}`)) {
+                    floaters.push({ row: r, col: c, colorId: grid[r][c].colorId });
+                }
+            }
+        }
+        return floaters;
+    }
+
+    function shiftCeilingDown() {
+        sound.playRowShift();
+        screenShake = 8;
+
+        for (let r = MAX_ROWS - 1; r >= 1; r--) {
+            const targetCols = getColsForRow(r);
+            const sourceRow = grid[r - 1];
+            const newRow = new Array(targetCols).fill(null);
+
+            for (let c = 0; c < targetCols; c++) {
+                if (c < sourceRow.length && sourceRow[c] !== null) {
+                    newRow[c] = sourceRow[c];
+                }
+            }
+            if (sourceRow.length > targetCols && sourceRow[targetCols] !== null) {
+                for (let c = targetCols - 1; c >= 0; c--) {
+                    if (newRow[c] === null) {
+                        newRow[c] = sourceRow[targetCols];
+                        break;
+                    }
+                }
+            }
+            grid[r] = newRow;
+        }
+
+        const row0Cols = getColsForRow(0);
+        const activeColors = getActiveBoardColors();
+        const freshRow = new Array(row0Cols).fill(null);
+        for (let c = 0; c < row0Cols; c++) {
+            const colorId = activeColors[Math.floor(Math.random() * activeColors.length)];
+            freshRow[c] = { colorId, scale: 0.2, bounceOffset: 0 };
+        }
+        grid[0] = freshRow;
+    }
+
+    function evaluateBoardEndConditions() {
+        let totalBubbles = 0;
+        let crossedDanger = false;
+
+        for (let r = 0; r < MAX_ROWS; r++) {
+            const cols = getColsForRow(r);
+            for (let c = 0; c < cols; c++) {
+                if (grid[r][c] !== null) {
+                    totalBubbles++;
+                    const pos = gridToScreen(r, c);
+                    if (pos.y + bubbleRadius >= dangerLineY) {
+                        crossedDanger = true;
+                    }
+                }
+            }
+        }
+
+        if (totalBubbles === 0) {
+            const clearBonus = 1000;
+            score += clearBonus;
+            saveHighScore();
+            updateHUD();
+            triggerEndScreen(true);
+            return true;
+        }
+
+        if (crossedDanger) {
+            saveHighScore();
+            updateHUD();
+            triggerEndScreen(false);
+            return true;
+        }
+
+        return false;
+    }
+
+    function triggerEndScreen(isWin) {
+        gameState = STATES.GAME_OVER;
+        sound.playGameOver(isWin);
+
+        if (isWin) {
+            endBadgeEl.textContent = 'Board Cleared! +1,000 Bonus';
+            endBadgeEl.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            endTitleEl.textContent = 'VICTORY!';
+        } else {
+            endBadgeEl.textContent = 'Danger Line Crossed';
+            endBadgeEl.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-rose-500/20 text-rose-300 border border-rose-500/30';
+            endTitleEl.textContent = 'GAME OVER';
+        }
+
+        endScoreEl.textContent = score.toLocaleString();
+        endBestEl.textContent = highScore.toLocaleString();
+        gameoverOverlay.classList.remove('hidden');
+    }
+
+    function resolveImpact(impactX, impactY) {
+        gameState = STATES.RESOLVING;
+
+        const cell = findNearestEmptyCell(impactX, impactY);
+        if (!cell) {
+            triggerEndScreen(false);
+            return;
+        }
+
+        const snappedColor = activeBubble.colorId;
+        grid[cell.row][cell.col] = {
+            colorId: snappedColor,
+            scale: 1.25,
+            bounceOffset: 0
+        };
+        activeBubble = null;
+        sound.playSnap();
+
+        const neighbors = getHexNeighbors(cell.row, cell.col);
+        neighbors.forEach(n => {
+            if (grid[n.row][n.col]) {
+                grid[n.row][n.col].scale = 1.12;
+            }
+        });
+
+        const matchedCluster = findMatchingCluster(cell.row, cell.col);
+        let poppedAny = false;
+
+        if (matchedCluster.length >= 3) {
+            poppedAny = true;
+            comboCount++;
+            shotsWithoutPop = 0;
+
+            const basePointsPerBubble = 30;
+            const matchPoints = matchedCluster.length * basePointsPerBubble * comboCount;
+            score += matchPoints;
+
+            let sumX = 0, sumY = 0;
+
+            matchedCluster.forEach((item, idx) => {
+                const pos = gridToScreen(item.row, item.col);
+                sumX += pos.x;
+                sumY += pos.y;
+                spawnPopParticles(pos.x, pos.y, grid[item.row][item.col].colorId, 10);
+                sound.playPop(idx, comboCount);
+                grid[item.row][item.col] = null;
+            });
+
+            const centerX = sumX / matchedCluster.length;
+            const centerY = sumY / matchedCluster.length;
+            const label = comboCount > 1 ? `+${matchPoints} (${comboCount}x!)` : `+${matchPoints}`;
+            spawnFloatingText(centerX, centerY, label, '#fde047');
+            screenShake = Math.min(10, 3 + matchedCluster.length * 0.8);
+
+            const floaters = findFloatingIslands();
+            if (floaters.length > 0) {
+                const floaterPoints = floaters.length * 100;
+                score += floaterPoints;
+                sound.playDropCluster(floaters.length);
+
+                let fSumX = 0, fSumY = 0;
+                floaters.forEach(f => {
+                    const pos = gridToScreen(f.row, f.col);
+                    fSumX += pos.x;
+                    fSumY += pos.y;
+                    grid[f.row][f.col] = null;
+
+                    fallingBubbles.push({
+                        x: pos.x,
+                        y: pos.y,
+                        vx: (Math.random() - 0.5) * 180,
+                        vy: -120 - Math.random() * 90,
+                        colorId: f.colorId,
+                        alpha: 1
+                    });
+                });
+
+                spawnFloatingText(
+                    fSumX / floaters.length,
+                    fSumY / floaters.length,
+                    `+${floaterPoints} DROP!`,
+                    '#38bdf8'
+                );
+            }
+        } else {
+            comboCount = 0;
+            shotsWithoutPop++;
+        }
+
+        saveHighScore();
+        updateHUD();
+
+        if (evaluateBoardEndConditions()) return;
+
+        if (!poppedAny && shotsWithoutPop >= SHOTS_PER_DROP) {
+            shotsWithoutPop = 0;
+            shiftCeilingDown();
+            updateHUD();
+            if (evaluateBoardEndConditions()) return;
+        }
+
+        const validColors = getActiveBoardColors();
+        const launchColor = validColors.includes(nextColorId) ? nextColorId : pickSmartColor(true);
+        nextColorId = pickSmartColor(true);
+        spawnBubbleInCannon(launchColor);
+        gameState = STATES.AIMING;
+    }
+
+    function spawnPopParticles(x, y, colorId, count) {
+        const theme = BUBBLE_COLORS[colorId];
+        for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.4);
+            const speed = 90 + Math.random() * 210;
+            particles.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                radius: 3 + Math.random() * 4.5,
+                color: Math.random() > 0.35 ? theme.main : theme.light,
+                life: 1.0,
+                decay: 1.8 + Math.random() * 0.9
+            });
+        }
+        particles.push({
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            radius: bubbleRadius * 0.5,
+            maxRadius: bubbleRadius * 2.1,
+            color: theme.light,
+            isRing: true,
+            life: 1.0,
+            decay: 3.2
+        });
+    }
+
+    function spawnFloatingText(x, y, text, color) {
+        floatingTexts.push({
+            x: Math.max(60, Math.min(width - 60, x)),
+            y: Math.max(40, y),
+            vy: -55,
+            text,
+            color,
+            life: 1.0
+        });
+    }
+
+    function update(dt) {
+        if (screenShake > 0) {
+            screenShake = Math.max(0, screenShake - dt * 35);
+        }
+
+        if (swapAnimProgress > 0) {
+            swapAnimProgress = Math.max(0, swapAnimProgress - dt * 5);
+        }
+
+        for (let r = 0; r < MAX_ROWS; r++) {
+            const cols = getColsForRow(r);
+            for (let c = 0; c < cols; c++) {
+                const cell = grid[r][c];
+                if (cell && Math.abs(cell.scale - 1) > 0.005) {
+                    cell.scale += (1 - cell.scale) * Math.min(1, dt * 16);
+                }
+            }
+        }
+
+        if (gameState === STATES.SHOOTING && activeBubble) {
+            const subSteps = 4;
+            const subDt = dt / subSteps;
+            const leftWall = bubbleRadius + 2;
+            const rightWall = width - bubbleRadius - 2;
+            const topWall = offsetY;
+            const hitDistSq = Math.pow((bubbleRadius * 2) * 0.90, 2);
+
+            for (let s = 0; s < subSteps; s++) {
+                activeBubble.x += activeBubble.vx * subDt;
+                activeBubble.y += activeBubble.vy * subDt;
+
+                if (activeBubble.x <= leftWall) {
+                    activeBubble.x = leftWall + (leftWall - activeBubble.x);
+                    activeBubble.vx = -activeBubble.vx;
+                    sound.playBounce();
+                } else if (activeBubble.x >= rightWall) {
+                    activeBubble.x = rightWall - (activeBubble.x - rightWall);
+                    activeBubble.vx = -activeBubble.vx;
+                    sound.playBounce();
+                }
+
+                if (activeBubble.y <= topWall) {
+                    activeBubble.y = topWall;
+                    resolveImpact(activeBubble.x, activeBubble.y);
+                    break;
+                }
+
+                let collided = false;
+                for (let r = 0; r < MAX_ROWS; r++) {
+                    const cols = getColsForRow(r);
+                    for (let c = 0; c < cols; c++) {
+                        if (grid[r][c] !== null) {
+                            const pos = gridToScreen(r, c);
+                            const dx = activeBubble.x - pos.x;
+                            const dy = activeBubble.y - pos.y;
+                            if (dx * dx + dy * dy < hitDistSq) {
+                                collided = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (collided) break;
+                }
+
+                if (collided) {
+                    resolveImpact(activeBubble.x, activeBubble.y);
+                    break;
+                }
+            }
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.life -= p.decay * dt;
+            if (p.life <= 0) {
+                particles.splice(i, 1);
+                continue;
+            }
+            if (p.isRing) {
+                p.radius += (p.maxRadius - p.radius) * Math.min(1, dt * 10);
+            } else {
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vy += 320 * dt;
+            }
+        }
+
+        for (let i = fallingBubbles.length - 1; i >= 0; i--) {
+            const fb = fallingBubbles[i];
+            fb.x += fb.vx * dt;
+            fb.y += fb.vy * dt;
+            fb.vy += 980 * dt;
+            if (fb.y > height + bubbleDiameter) {
+                fallingBubbles.splice(i, 1);
+            }
+        }
+
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            const ft = floatingTexts[i];
+            ft.y += ft.vy * dt;
+            ft.life -= dt * 1.15;
+            if (ft.life <= 0) {
+                floatingTexts.splice(i, 1);
+            }
+        }
+    }
+
+    function drawBubble(x, y, radius, colorId, scale = 1, alpha = 1) {
+        const theme = BUBBLE_COLORS[colorId] || BUBBLE_COLORS[0];
+        const r = radius * scale;
+        if (r <= 1) return;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(x, y);
+
+        const grad = ctx.createRadialGradient(-r * 0.32, -r * 0.35, r * 0.08, 0, 0, r);
+        grad.addColorStop(0, theme.light);
+        grad.addColorStop(0.45, theme.main);
+        grad.addColorStop(1, theme.dark);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, r - 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(-Math.PI / 4);
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.36, -r * 0.14, r * 0.28, r * 0.15, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.68)';
+        ctx.fill();
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(-r * 0.12, -r * 0.52, r * 0.07, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawBackgroundAndDangerLine(timeSec) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.06)';
+        ctx.lineWidth = 1;
+        for (let r = 0; r < MAX_ROWS; r++) {
+            const cols = getColsForRow(r);
+            for (let c = 0; c < cols; c++) {
+                const pos = gridToScreen(r, c);
+                if (pos.y < dangerLineY) {
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, bubbleRadius * 0.85, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+        ctx.restore();
+
+        const topBarGrad = ctx.createLinearGradient(0, 0, width, 0);
+        topBarGrad.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+        topBarGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.45)');
+        topBarGrad.addColorStop(1, 'rgba(99, 102, 241, 0.2)');
+        ctx.fillStyle = topBarGrad;
+        ctx.fillRect(0, 0, width, 5);
+
+        const pulse = 0.45 + 0.35 * Math.sin(timeSec * 4.5);
+        ctx.save();
+        ctx.strokeStyle = `rgba(244, 63, 94, ${pulse})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.lineDashOffset = -timeSec * 24;
+        ctx.beginPath();
+        ctx.moveTo(12, dangerLineY);
+        ctx.lineTo(width - 12, dangerLineY);
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(251, 113, 133, ${pulse * 0.85})`;
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('DANGER LINE', width - 14, dangerLineY - 5);
+        ctx.restore();
+    }
+
+    function drawAimingGuide(timeSec) {
+        if (gameState !== STATES.AIMING || !activeBubble) return;
+
+        const points = computeAimTrajectory();
+        if (points.length < 2) return;
+
+        const theme = BUBBLE_COLORS[activeBubble.colorId];
+
+        ctx.save();
+        ctx.strokeStyle = theme.glow;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 10]);
+        ctx.lineDashOffset = -timeSec * 65;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+
+        const endPt = points[points.length - 1];
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(endPt.x, endPt.y, bubbleRadius * 0.72, 0, Math.PI * 2);
+        ctx.strokeStyle = theme.light;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawCannonAndQueue() {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(nextBubbleX, nextBubbleY, bubbleRadius * 0.92, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(129, 140, 248, 0.45)';
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '700 9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('NEXT', nextBubbleX, nextBubbleY + bubbleRadius + 12);
+
+        const nextScale = 0.74 + swapAnimProgress * 0.22;
+        drawBubble(nextBubbleX, nextBubbleY, bubbleRadius, nextColorId, nextScale, 1);
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(cannonX, cannonY);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, bubbleRadius * 1.48, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.35)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(aimAngle);
+
+        const barrelW = bubbleRadius * 1.35;
+        const barrelH = bubbleRadius * 1.85;
+        const barrelGrad = ctx.createLinearGradient(-barrelW / 2, 0, barrelW / 2, 0);
+        barrelGrad.addColorStop(0, '#334155');
+        barrelGrad.addColorStop(0.5, '#64748b');
+        barrelGrad.addColorStop(1, '#1e293b');
+
+        ctx.fillStyle = barrelGrad;
+        ctx.beginPath();
+        ctx.roundRect(-barrelW / 2, -barrelH, barrelW, barrelH, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(-barrelW / 2 + 3, -barrelH + 4, barrelW - 6, 4);
+        ctx.restore();
+
+        const baseGrad = ctx.createRadialGradient(-6, -6, 4, 0, 0, bubbleRadius * 1.32);
+        baseGrad.addColorStop(0, '#475569');
+        baseGrad.addColorStop(1, '#0f172a');
+        ctx.beginPath();
+        ctx.arc(0, 0, bubbleRadius * 1.28, 0, Math.PI * 2);
+        ctx.fillStyle = baseGrad;
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#6366f1';
+        ctx.stroke();
+
+        ctx.restore();
+
+        if (activeBubble) {
+            const activeScale = 1 + swapAnimProgress * 0.18;
+            drawBubble(activeBubble.x, activeBubble.y, bubbleRadius, activeBubble.colorId, activeScale, 1);
+        }
+    }
+
+    function render(timestamp) {
+        const timeSec = timestamp * 0.001;
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.save();
+        if (screenShake > 0) {
+            const sx = (Math.random() - 0.5) * screenShake;
+            const sy = (Math.random() - 0.5) * screenShake;
+            ctx.translate(sx, sy);
+        }
+
+        drawBackgroundAndDangerLine(timeSec);
+
+        for (let r = 0; r < MAX_ROWS; r++) {
+            const cols = getColsForRow(r);
+            for (let c = 0; c < cols; c++) {
+                const cell = grid[r][c];
+                if (cell !== null) {
+                    const pos = gridToScreen(r, c);
+                    drawBubble(pos.x, pos.y, bubbleRadius, cell.colorId, cell.scale, 1);
+                }
+            }
+        }
+
+        drawAimingGuide(timeSec);
+        drawCannonAndQueue();
+
+        for (let i = 0; i < fallingBubbles.length; i++) {
+            const fb = fallingBubbles[i];
+            drawBubble(fb.x, fb.y, bubbleRadius, fb.colorId, 0.95, 0.92);
+        }
+
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.life);
+            if (p.isRing) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        for (let i = 0; i < floatingTexts.length; i++) {
+            const ft = floatingTexts[i];
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, ft.life);
+            ctx.font = '700 18px Fredoka, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'rgba(2, 6, 23, 0.85)';
+            ctx.strokeText(ft.text, ft.x, ft.y);
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, ft.x, ft.y);
+            ctx.restore();
+        }
+
+        ctx.restore();
+    }
+
+    function gameLoop(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const dt = Math.min(0.05, (timestamp - lastTimestamp) / 1000);
+        lastTimestamp = timestamp;
+
+        update(dt);
+        render(timestamp);
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function isTapOnCannonOrNext(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const px = clientX - rect.left;
+        const py = clientY - rect.top;
+
+        const distNext = Math.hypot(px - nextBubbleX, py - nextBubbleY);
+        if (distNext <= bubbleRadius * 1.45) return true;
+
+        const distCannon = Math.hypot(px - cannonX, py - cannonY);
+        if (distCannon <= bubbleRadius * 1.45) return true;
+
+        return false;
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+        if (gameState !== STATES.AIMING) return;
+        e.preventDefault();
+        sound.init();
+
+        if (isTapOnCannonOrNext(e.clientX, e.clientY)) {
+            swapActiveAndNext();
+            return;
+        }
+
+        isPointerDown = true;
+        updateAimFromClientCoords(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (gameState === STATES.AIMING) {
+            updateAimFromClientCoords(e.clientX, e.clientY);
+        }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+        if (!isPointerDown) return;
+        isPointerDown = false;
+        if (gameState === STATES.AIMING) {
+            updateAimFromClientCoords(e.clientX, e.clientY);
+            fireBubble();
+        }
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (gameState === STATES.AIMING) {
+                swapActiveAndNext();
+            }
+        } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+            if (gameState === STATES.AIMING) {
+                aimAngle = Math.max(MIN_ANGLE, aimAngle - 0.06);
+            }
+        } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+            if (gameState === STATES.AIMING) {
+                aimAngle = Math.min(MAX_ANGLE, aimAngle + 0.06);
+            }
+        } else if (e.code === 'ArrowUp' || e.code === 'Enter') {
+            if (gameState === STATES.AIMING) {
+                fireBubble();
+            }
+        }
+    });
+
+    btnPlay.addEventListener('click', startNewGame);
+    btnRestart.addEventListener('click', startNewGame);
+    btnSwapHud.addEventListener('click', () => {
+        sound.init();
+        swapActiveAndNext();
+    });
+
+    btnMute.addEventListener('click', () => {
+        const isMuted = sound.toggleMute();
+        iconSoundOn.classList.toggle('hidden', isMuted);
+        iconSoundOff.classList.toggle('hidden', !isMuted);
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+
+    window.onload = function () {
+        grid = createEmptyGrid();
+        resizeCanvas();
+        updateHUD();
+        requestAnimationFrame(gameLoop);
+    };
+})();
+</script>
+</body>
+</html>
