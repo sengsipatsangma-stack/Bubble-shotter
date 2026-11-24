@@ -1,10 +1,10 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bubble Shooter Arcade</title>
+    <title>Bubble Blitz Arcade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -245,105 +245,161 @@
 <script>
 /**
  * ============================================================================
- * BUBBLE SHOOTER ARCADE - LEVELS & LIMITED AMMO ENGINE
+ * BUBBLE BLITZ ARCADE - LEVELS, LIMITED AMMO & LIFECYCLE-SAFE MOBILE AUDIO
  * ============================================================================
  */
 (function () {
     'use strict';
 
     // ------------------------------------------------------------------------
-    // 1. PROCEDURAL WEB AUDIO ENGINE
+    // 1. MOBILE-UNLOCKED & LIFECYCLE-SAFE WEB AUDIO ENGINE
     // ------------------------------------------------------------------------
     class SoundEngine {
         constructor() {
             this.ctx = null;
             this.muted = false;
+            this.unlocked = false;
+            this.isBackgrounded = false;
         }
-        init() {
-            if (!this.ctx) {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) this.ctx = new AudioCtx();
+
+        /**
+         * Creates/resumes AudioContext and plays a 1-sample silent buffer
+         * to satisfy mobile browser (Android Chrome / iOS Safari) gesture unlock policies.
+         */
+        unlock() {
+            if (this.isBackgrounded) return;
+            try {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (!this.ctx) return;
+
+                if (this.ctx.state === 'suspended' && !this.muted) {
+                    this.ctx.resume().catch(() => {});
+                }
+
+                if (!this.unlocked) {
+                    const buffer = this.ctx.createBuffer(1, 1, 22050);
+                    const source = this.ctx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(this.ctx.destination);
+                    source.start(0);
+                    this.unlocked = true;
+                }
+            } catch (e) {}
+        }
+
+        /**
+         * Suspends audio immediately when the player switches tabs, minimizes,
+         * locks screen, or leaves the page.
+         */
+        suspendAudio() {
+            this.isBackgrounded = true;
+            if (this.ctx && this.ctx.state === 'running') {
+                this.ctx.suspend().catch(() => {});
             }
-            if (this.ctx && this.ctx.state === 'suspended') {
+        }
+
+        /**
+         * Restores audio when returning to the game if not manually muted.
+         */
+        resumeAudio() {
+            this.isBackgrounded = false;
+            if (!this.muted && this.ctx && this.ctx.state === 'suspended') {
                 this.ctx.resume().catch(() => {});
             }
         }
+
+        canPlay() {
+            if (this.muted || this.isBackgrounded || document.hidden) return false;
+            this.unlock();
+            return this.ctx && this.ctx.state === 'running';
+        }
+
         toggleMute() {
             this.muted = !this.muted;
+            if (this.muted) {
+                if (this.ctx && this.ctx.state === 'running') {
+                    this.ctx.suspend().catch(() => {});
+                }
+            } else if (!this.isBackgrounded) {
+                this.unlock();
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(() => {});
+                }
+            }
             return this.muted;
         }
+
         playShoot() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
+            if (!this.canPlay()) return;
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(240, now);
-            osc.frequency.exponentialRampToValueAtTime(620, now + 0.11);
-            gain.gain.setValueAtTime(0.18, now);
+            osc.frequency.setValueAtTime(250, now);
+            osc.frequency.exponentialRampToValueAtTime(640, now + 0.11);
+            gain.gain.setValueAtTime(0.24, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.13);
         }
+
         playBounce() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
+            if (!this.canPlay()) return;
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(520, now);
             osc.frequency.exponentialRampToValueAtTime(340, now + 0.06);
-            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.setValueAtTime(0.16, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.07);
         }
+
         playSnap() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
+            if (!this.canPlay()) return;
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(190, now);
+            osc.frequency.setValueAtTime(195, now);
             osc.frequency.exponentialRampToValueAtTime(110, now + 0.07);
-            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.setValueAtTime(0.22, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.08);
         }
+
         playSwap() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
+            if (!this.canPlay()) return;
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(380, now);
             osc.frequency.setValueAtTime(540, now + 0.05);
-            gain.gain.setValueAtTime(0.11, now);
+            gain.gain.setValueAtTime(0.16, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.12);
         }
+
         playPop(index, comboMultiplier = 1) {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
+            if (!this.canPlay()) return;
             const now = this.ctx.currentTime + (index * 0.025);
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -351,17 +407,16 @@
             osc.type = 'sine';
             osc.frequency.setValueAtTime(baseFreq, now);
             osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.45, now + 0.09);
-            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.setValueAtTime(0.22, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.11);
         }
+
         playDropCluster(count) {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
+            if (!this.canPlay()) return;
             const notes = [523.25, 659.25, 783.99, 1046.50];
             const steps = Math.min(4, Math.max(2, count));
             for (let i = 0; i < steps; i++) {
@@ -370,7 +425,7 @@
                 const gain = this.ctx.createGain();
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(notes[i], now);
-                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.setValueAtTime(0.20, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
@@ -378,10 +433,9 @@
                 osc.stop(now + 0.19);
             }
         }
+
         playGameOver(isWin) {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
+            if (!this.canPlay()) return;
             const freqs = isWin ? [523.25, 659.25, 783.99, 1046.5] : [349.23, 311.13, 277.18, 220.0];
             freqs.forEach((f, idx) => {
                 const now = this.ctx.currentTime + idx * 0.12;
@@ -389,7 +443,7 @@
                 const gain = this.ctx.createGain();
                 osc.type = isWin ? 'triangle' : 'sawtooth';
                 osc.frequency.setValueAtTime(f, now);
-                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.setValueAtTime(0.20, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
@@ -400,7 +454,7 @@
     }
 
     // ------------------------------------------------------------------------
-    // 2. GLOSSY BUBBLE COLOR PALETTE (Ruby, Amber, Emerald, Sapphire, Amethyst)
+    // 2. GLOSSY BUBBLE COLOR PALETTE
     // ------------------------------------------------------------------------
     const BUBBLE_COLORS = [
         { id: 0, name: 'Ruby',     light: '#fda4af', main: '#f43f5e', dark: '#881337', glow: 'rgba(244, 63, 94, 0.55)' },
@@ -458,6 +512,37 @@
 
     const sound = new SoundEngine();
 
+    // Global mobile gesture audio unlockers
+    ['touchstart', 'pointerdown', 'keydown'].forEach((evt) => {
+        window.addEventListener(evt, () => sound.unlock(), { passive: true });
+    });
+
+    // Automatically stop/pause sound when user switches tabs, minimizes, or leaves the app
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            isPointerDown = false;
+            sound.suspendAudio();
+        } else {
+            sound.resumeAudio();
+        }
+    });
+
+    window.addEventListener('pagehide', () => {
+        isPointerDown = false;
+        sound.suspendAudio();
+    });
+
+    window.addEventListener('blur', () => {
+        isPointerDown = false;
+        sound.suspendAudio();
+    });
+
+    window.addEventListener('focus', () => {
+        if (!document.hidden) {
+            sound.resumeAudio();
+        }
+    });
+
     let gameState = STATES.MENU;
     let width = 360;
     let height = 640;
@@ -468,6 +553,7 @@
     let rowHeight = bubbleDiameter * SIN_60;
     let offsetX = 18;
     let offsetY = 24;
+    let dangerLineY = 500;
     let cannonX = 180;
     let cannonY = 580;
     let nextBubbleX = 105;
@@ -556,6 +642,7 @@
 
         cannonX = width / 2;
         cannonY = height - Math.max(54, bubbleDiameter * 1.55);
+        dangerLineY = cannonY - bubbleDiameter * 1.65;
         nextBubbleX = cannonX - Math.min(95, width * 0.23);
         nextBubbleY = cannonY + 10;
         bulletSpeed = Math.max(950, height * 1.85);
@@ -619,7 +706,7 @@
     }
 
     function startNewGame(keepScore = false) {
-        sound.init();
+        sound.unlock();
         if (!keepScore) {
             score = 0;
             currentLevel = 1;
@@ -636,15 +723,13 @@
         comboCount = 0;
         screenShake = 0;
 
-        // Level progression: increases rows & color count while tightening ammo
         const rowsToPopulate = Math.min(8, 3 + level);
-        const paletteCount = Math.min(BUBBLE_COLORS.length, 3 + Math.floor((level - 1) / 1));
+        const paletteCount = Math.min(BUBBLE_COLORS.length, 3 + (level - 1));
         ammoLeft = Math.max(16, 30 - (level - 1) * 2);
 
         for (let r = 0; r < rowsToPopulate; r++) {
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
-                // Leave strategic gaps in higher levels for fun bank shots
                 if (level >= 3 && r === rowsToPopulate - 1 && (c === 0 || c === cols - 1)) {
                     continue;
                 }
@@ -846,14 +931,22 @@
         return floaters;
     }
 
-    function checkWinCondition() {
+    function evaluateBoardState() {
+        let total = 0;
+        let crossedDanger = false;
         for (let r = 0; r < MAX_ROWS; r++) {
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
-                if (grid[r][c] !== null) return false;
+                if (grid[r][c] !== null) {
+                    total++;
+                    const pos = gridToScreen(r, c);
+                    if (pos.y + bubbleRadius >= dangerLineY) {
+                        crossedDanger = true;
+                    }
+                }
             }
         }
-        return true;
+        return { isEmpty: total === 0, crossedDanger };
     }
 
     function resolveImpact(impactX, impactY) {
@@ -930,8 +1023,14 @@
         saveHighScore();
         updateHUD();
 
-        if (checkWinCondition()) {
+        const status = evaluateBoardState();
+        if (status.isEmpty) {
             triggerWinScreen();
+            return;
+        }
+
+        if (status.crossedDanger) {
+            triggerEndScreen('Danger Line Crossed');
             return;
         }
 
@@ -1016,6 +1115,8 @@
     }
 
     function update(dt) {
+        if (document.hidden) return;
+
         if (screenShake > 0) {
             screenShake = Math.max(0, screenShake - dt * 35);
         }
@@ -1159,7 +1260,7 @@
         ctx.restore();
     }
 
-    function drawBackground() {
+    function drawBackgroundAndDangerLine(timeSec) {
         ctx.save();
         ctx.strokeStyle = 'rgba(99, 102, 241, 0.06)';
         ctx.lineWidth = 1;
@@ -1167,7 +1268,7 @@
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
                 const pos = gridToScreen(r, c);
-                if (pos.y < cannonY - bubbleDiameter * 1.4) {
+                if (pos.y < dangerLineY) {
                     ctx.beginPath();
                     ctx.arc(pos.x, pos.y, bubbleRadius * 0.85, 0, Math.PI * 2);
                     ctx.stroke();
@@ -1182,6 +1283,23 @@
         topBarGrad.addColorStop(1, 'rgba(99, 102, 241, 0.2)');
         ctx.fillStyle = topBarGrad;
         ctx.fillRect(0, 0, width, 5);
+
+        const pulse = 0.45 + 0.35 * Math.sin(timeSec * 4.5);
+        ctx.save();
+        ctx.strokeStyle = `rgba(244, 63, 94, ${pulse})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.lineDashOffset = -timeSec * 24;
+        ctx.beginPath();
+        ctx.moveTo(12, dangerLineY);
+        ctx.lineTo(width - 12, dangerLineY);
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(251, 113, 133, ${pulse * 0.85})`;
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('DANGER LINE', width - 14, dangerLineY - 5);
+        ctx.restore();
     }
 
     function drawAimingGuide(timeSec) {
@@ -1222,7 +1340,6 @@
     }
 
     function drawCannonAndQueue() {
-        // Next-Bubble Queue Pedestal
         ctx.save();
         ctx.beginPath();
         ctx.arc(nextBubbleX, nextBubbleY, bubbleRadius * 0.92, 0, Math.PI * 2);
@@ -1241,7 +1358,6 @@
         drawBubble(nextBubbleX, nextBubbleY, bubbleRadius, nextColorId, nextScale, 1);
         ctx.restore();
 
-        // Rotating Cannon Launcher
         ctx.save();
         ctx.translate(cannonX, cannonY);
 
@@ -1303,7 +1419,7 @@
             ctx.translate(sx, sy);
         }
 
-        drawBackground();
+        drawBackgroundAndDangerLine(timeSec);
 
         for (let r = 0; r < MAX_ROWS; r++) {
             const cols = getColsForRow(r);
@@ -1381,7 +1497,7 @@
     canvas.addEventListener('pointerdown', (e) => {
         if (gameState !== STATES.AIMING) return;
         e.preventDefault();
-        sound.init();
+        sound.unlock();
         if (isTapOnCannonOrNext(e.clientX, e.clientY)) {
             swapActiveAndNext();
             return;
@@ -1421,12 +1537,13 @@
     btnPlay.addEventListener('click', () => startNewGame(false));
     btnRestart.addEventListener('click', () => startNewGame(false));
     btnNextLevel.addEventListener('click', () => {
+        sound.unlock();
         currentLevel++;
         winOverlay.classList.add('hidden');
         setupLevel(currentLevel);
     });
     btnSwapHud.addEventListener('click', () => {
-        sound.init();
+        sound.unlock();
         swapActiveAndNext();
     });
     btnMute.addEventListener('click', () => {
