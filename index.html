@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,45 +100,48 @@
 
 <div id="game-shell">
     <!-- Top HUD Bar -->
-    <header class="z-20 flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-indigo-500/20 backdrop-blur-md">
-        <div class="flex items-center gap-3">
+    <header class="z-20 flex items-center justify-between px-3 py-2 bg-slate-950/80 border-b border-indigo-500/20 backdrop-blur-md">
+        <div class="flex items-center gap-1.5 sm:gap-2">
             <!-- Score Display -->
-            <div class="bg-slate-900/90 border border-slate-700/70 rounded-xl px-3 py-1 min-w-[92px]">
-                <div class="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold leading-tight">Score</div>
-                <div id="hud-score" class="text-lg font-bold text-white leading-tight tabular-nums">0</div>
+            <div class="bg-slate-900/90 border border-slate-700/70 rounded-xl px-2.5 py-1 min-w-[66px]">
+                <div class="text-[9px] uppercase tracking-wider text-indigo-300 font-semibold leading-tight">Score</div>
+                <div id="hud-score" class="text-sm sm:text-base font-bold text-white leading-tight tabular-nums">0</div>
             </div>
-            <!-- High Score Display -->
-            <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl px-3 py-1 min-w-[92px]">
-                <div class="text-[10px] uppercase tracking-wider text-amber-300 font-semibold leading-tight">Best</div>
-                <div id="hud-best" class="text-lg font-bold text-amber-200 leading-tight tabular-nums">0</div>
+            <!-- Best Score Display -->
+            <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl px-2.5 py-1 min-w-[66px]">
+                <div class="text-[9px] uppercase tracking-wider text-amber-300 font-semibold leading-tight">Best</div>
+                <div id="hud-best" class="text-sm sm:text-base font-bold text-amber-200 leading-tight tabular-nums">0</div>
+            </div>
+            <!-- Level Display -->
+            <div class="bg-slate-900/90 border border-sky-500/30 rounded-xl px-2.5 py-1 min-w-[52px] text-center">
+                <div class="text-[9px] uppercase tracking-wider text-sky-300 font-semibold leading-tight">Level</div>
+                <div id="hud-level" class="text-sm sm:text-base font-bold text-sky-200 leading-tight tabular-nums">1</div>
             </div>
         </div>
 
-        <!-- Shot Warning Indicator & Audio Controls -->
-        <div class="flex items-center gap-2">
-            <!-- Shots until ceiling drop pips -->
-            <div class="bg-slate-900/90 border border-slate-700/70 rounded-xl px-2.5 py-1 flex flex-col items-center" title="Shots left before new row drops">
-                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Row Drop</span>
-                <div id="shot-pips" class="flex items-center gap-1 mt-0.5">
-                    <!-- 6 pips rendered dynamically -->
-                </div>
+        <!-- Ammo / Balls Left & Audio Controls -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- Balls Left Display -->
+            <div id="ammo-box" class="bg-slate-900/90 border border-rose-500/30 rounded-xl px-2.5 py-1 min-w-[66px] text-center transition-colors">
+                <div class="text-[9px] uppercase tracking-wider text-rose-300 font-semibold leading-tight">Ammo Left</div>
+                <div id="hud-ammo" class="text-sm sm:text-base font-bold text-rose-200 leading-tight tabular-nums">28</div>
             </div>
 
-            <!-- Swap Button (Mobile/Click friendly) -->
+            <!-- Swap Button -->
             <button id="btn-swap-hud" type="button" aria-label="Swap Bubble" title="Swap Bubble (Spacebar)"
-                class="p-2.5 rounded-xl bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-200 active:scale-95 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                class="p-2 rounded-xl bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-200 active:scale-95 transition cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
                 </svg>
             </button>
 
             <!-- Mute Toggle -->
             <button id="btn-mute" type="button" aria-label="Toggle Sound" title="Mute / Unmute"
-                class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/70 text-slate-200 active:scale-95 transition">
-                <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                class="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/70 text-slate-200 active:scale-95 transition cursor-pointer">
+                <svg id="icon-sound-on" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
                 </svg>
-                <svg id="icon-sound-off" class="w-5 h-5 hidden text-rose-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <svg id="icon-sound-off" class="w-4 h-4 hidden text-rose-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
                 </svg>
             </button>
@@ -149,10 +153,10 @@
         <canvas id="gameCanvas"></canvas>
 
         <!-- MENU OVERLAY -->
-        <div id="menu-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/75 backdrop-blur-md transition-opacity duration-300">
+        <div id="menu-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/75 backdrop-blur-md">
             <div class="title-float text-center mb-6">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold tracking-wider uppercase mb-3">
-                    Arcade Hex Edition
+                    Arcade Edition • Levels & Ammo
                 </div>
                 <h1 class="text-5xl sm:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-sky-200 to-indigo-400 drop-shadow-[0_4px_16px_rgba(56,189,248,0.45)]">
                     BUBBLE<br>BLITZ
@@ -176,21 +180,21 @@
 
             <!-- Play CTA -->
             <button id="btn-play" type="button" class="arcade-btn w-full max-w-[260px] py-4 px-8 rounded-2xl text-2xl font-bold text-white tracking-wide cursor-pointer">
-                PLAY GAME
+                START GAME
             </button>
 
             <!-- Compact Controls Hint -->
             <div class="mt-7 text-center text-xs text-slate-300/80 space-y-1 max-w-[280px]">
-                <p><span class="text-sky-300 font-semibold">Aim & Shoot:</span> Move mouse or drag & release</p>
+                <p><span class="text-sky-300 font-semibold">Aim & Shoot:</span> Drag or move mouse & release</p>
                 <p><span class="text-amber-300 font-semibold">Swap Bubble:</span> Tap cannon or press <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-[11px]">Space</kbd></p>
             </div>
         </div>
 
-        <!-- GAME OVER / VICTORY OVERLAY -->
+        <!-- GAME OVER OVERLAY -->
         <div id="gameover-overlay" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
             <div class="glass-panel rounded-3xl p-7 w-full max-w-[320px] text-center shadow-2xl border border-indigo-400/25">
                 <div id="end-badge" class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                    Danger Line Crossed
+                    Out of Ammo
                 </div>
                 <h2 id="end-title" class="text-4xl font-bold text-white mb-5">GAME OVER</h2>
 
@@ -206,7 +210,32 @@
                 </div>
 
                 <button id="btn-restart" type="button" class="arcade-btn arcade-btn-emerald w-full py-3.5 px-6 rounded-2xl text-xl font-bold text-white tracking-wide cursor-pointer">
-                    PLAY AGAIN
+                    TRY AGAIN
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL WIN / NEXT LEVEL OVERLAY -->
+        <div id="win-overlay" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <div class="glass-panel rounded-3xl p-7 w-full max-w-[320px] text-center shadow-2xl border border-emerald-400/25">
+                <div class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Level Cleared!
+                </div>
+                <h2 id="win-title" class="text-3xl font-bold text-white mb-5">LEVEL 1 COMPLETE</h2>
+
+                <div class="space-y-3 mb-6">
+                    <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-700/70">
+                        <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Current Score</div>
+                        <div id="win-score" class="text-3xl font-bold text-sky-300 tabular-nums">0</div>
+                    </div>
+                    <div class="bg-slate-900/90 rounded-2xl p-3 border border-emerald-500/30 flex items-center justify-between px-5">
+                        <span class="text-xs uppercase tracking-wider text-emerald-300 font-semibold">Ammo Bonus</span>
+                        <span id="win-ammo-bonus" class="text-lg font-bold text-emerald-200 tabular-nums">+0</span>
+                    </div>
+                </div>
+
+                <button id="btn-next-level" type="button" class="arcade-btn arcade-btn-emerald w-full py-3.5 px-6 rounded-2xl text-xl font-bold text-white tracking-wide cursor-pointer">
+                    NEXT LEVEL ➔
                 </button>
             </div>
         </div>
@@ -216,148 +245,123 @@
 <script>
 /**
  * ============================================================================
- * BUBBLE SHOOTER ARCADE - COMPLETE ENGINE
+ * BUBBLE SHOOTER ARCADE - LEVELS & LIMITED AMMO ENGINE
  * ============================================================================
  */
-
 (function () {
     'use strict';
 
+    // ------------------------------------------------------------------------
+    // 1. PROCEDURAL WEB AUDIO ENGINE
+    // ------------------------------------------------------------------------
     class SoundEngine {
         constructor() {
             this.ctx = null;
             this.muted = false;
         }
-
         init() {
             if (!this.ctx) {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    this.ctx = new AudioCtx();
-                }
+                if (AudioCtx) this.ctx = new AudioCtx();
             }
             if (this.ctx && this.ctx.state === 'suspended') {
                 this.ctx.resume().catch(() => {});
             }
         }
-
         toggleMute() {
             this.muted = !this.muted;
             return this.muted;
         }
-
         playShoot() {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
-
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(240, now);
             osc.frequency.exponentialRampToValueAtTime(620, now + 0.11);
-
             gain.gain.setValueAtTime(0.18, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.13);
         }
-
         playBounce() {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
-
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(520, now);
             osc.frequency.exponentialRampToValueAtTime(340, now + 0.06);
-
             gain.gain.setValueAtTime(0.12, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
-
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.07);
         }
-
         playSnap() {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
-
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(190, now);
             osc.frequency.exponentialRampToValueAtTime(110, now + 0.07);
-
             gain.gain.setValueAtTime(0.16, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
-
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.08);
         }
-
         playSwap() {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
-
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(380, now);
             osc.frequency.setValueAtTime(540, now + 0.05);
-
             gain.gain.setValueAtTime(0.11, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.12);
         }
-
         playPop(index, comboMultiplier = 1) {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
-
             const now = this.ctx.currentTime + (index * 0.025);
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-
             const baseFreq = 360 * Math.pow(1.065, Math.min(index, 14)) * (1 + (comboMultiplier - 1) * 0.12);
             osc.type = 'sine';
             osc.frequency.setValueAtTime(baseFreq, now);
             osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.45, now + 0.09);
-
             gain.gain.setValueAtTime(0.16, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + 0.11);
         }
-
         playDropCluster(count) {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
-
             const notes = [523.25, 659.25, 783.99, 1046.50];
             const steps = Math.min(4, Math.max(2, count));
             for (let i = 0; i < steps; i++) {
@@ -374,33 +378,10 @@
                 osc.stop(now + 0.19);
             }
         }
-
-        playRowShift() {
-            if (this.muted) return;
-            this.init();
-            if (!this.ctx) return;
-
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, now);
-            osc.frequency.exponentialRampToValueAtTime(65, now + 0.22);
-
-            gain.gain.setValueAtTime(0.14, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.25);
-        }
-
         playGameOver(isWin) {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
-
             const freqs = isWin ? [523.25, 659.25, 783.99, 1046.5] : [349.23, 311.13, 277.18, 220.0];
             freqs.forEach((f, idx) => {
                 const now = this.ctx.currentTime + idx * 0.12;
@@ -418,13 +399,15 @@
         }
     }
 
+    // ------------------------------------------------------------------------
+    // 2. GLOSSY BUBBLE COLOR PALETTE (Ruby, Amber, Emerald, Sapphire, Amethyst)
+    // ------------------------------------------------------------------------
     const BUBBLE_COLORS = [
         { id: 0, name: 'Ruby',     light: '#fda4af', main: '#f43f5e', dark: '#881337', glow: 'rgba(244, 63, 94, 0.55)' },
         { id: 1, name: 'Amber',    light: '#fde68a', main: '#f59e0b', dark: '#78350f', glow: 'rgba(245, 158, 11, 0.55)' },
         { id: 2, name: 'Emerald',  light: '#6ee7b7', main: '#10b981', dark: '#064e3b', glow: 'rgba(16, 185, 129, 0.55)' },
         { id: 3, name: 'Sapphire', light: '#7dd3fc', main: '#0ea5e9', dark: '#0c4a6e', glow: 'rgba(14, 165, 233, 0.55)' },
-        { id: 4, name: 'Amethyst', light: '#f0abfc', main: '#d946ef', dark: '#701a75', glow: 'rgba(217, 70, 239, 0.55)' },
-        { id: 5, name: 'Tangerine',light: '#fdba74', main: '#f97316', dark: '#7c2d12', glow: 'rgba(249, 115, 22, 0.55)' }
+        { id: 4, name: 'Amethyst', light: '#f0abfc', main: '#d946ef', dark: '#701a75', glow: 'rgba(217, 70, 239, 0.55)' }
     ];
 
     const STATES = {
@@ -432,28 +415,34 @@
         AIMING: 'AIMING',
         SHOOTING: 'SHOOTING',
         RESOLVING: 'RESOLVING',
-        GAME_OVER: 'GAME_OVER'
+        GAME_OVER: 'GAME_OVER',
+        LEVEL_WIN: 'LEVEL_WIN'
     };
 
     const EVEN_COLS = 10;
-    const ODD_COLS = EVEN_COLS - 1;
+    const ODD_COLS = 9;
     const MAX_ROWS = 15;
-    const INITIAL_ROWS = 6;
-    const SHOTS_PER_DROP = 6;
     const SIN_60 = 0.8660254;
     const MIN_ANGLE = -80 * (Math.PI / 180);
-    const MAX_ANGLE =  80 * (Math.PI / 180);
+    const MAX_ANGLE = 80 * (Math.PI / 180);
 
+    // DOM Elements
     const wrapper = document.getElementById('canvas-wrapper');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
     const hudScoreEl = document.getElementById('hud-score');
     const hudBestEl = document.getElementById('hud-best');
-    const shotPipsEl = document.getElementById('shot-pips');
+    const hudLevelEl = document.getElementById('hud-level');
+    const hudAmmoEl = document.getElementById('hud-ammo');
+    const ammoBoxEl = document.getElementById('ammo-box');
     const menuOverlay = document.getElementById('menu-overlay');
     const menuHighScoreEl = document.getElementById('menu-high-score');
     const gameoverOverlay = document.getElementById('gameover-overlay');
+    const winOverlay = document.getElementById('win-overlay');
+    const winTitleEl = document.getElementById('win-title');
+    const winScoreEl = document.getElementById('win-score');
+    const winAmmoBonusEl = document.getElementById('win-ammo-bonus');
     const endBadgeEl = document.getElementById('end-badge');
     const endTitleEl = document.getElementById('end-title');
     const endScoreEl = document.getElementById('end-score');
@@ -461,6 +450,7 @@
 
     const btnPlay = document.getElementById('btn-play');
     const btnRestart = document.getElementById('btn-restart');
+    const btnNextLevel = document.getElementById('btn-next-level');
     const btnMute = document.getElementById('btn-mute');
     const btnSwapHud = document.getElementById('btn-swap-hud');
     const iconSoundOn = document.getElementById('icon-sound-on');
@@ -478,7 +468,6 @@
     let rowHeight = bubbleDiameter * SIN_60;
     let offsetX = 18;
     let offsetY = 24;
-    let dangerLineY = 500;
     let cannonX = 180;
     let cannonY = 580;
     let nextBubbleX = 105;
@@ -493,8 +482,9 @@
 
     let score = 0;
     let highScore = 0;
+    let currentLevel = 1;
+    let ammoLeft = 28;
     let comboCount = 0;
-    let shotsWithoutPop = 0;
     let isPointerDown = false;
     let screenShake = 0;
 
@@ -525,7 +515,6 @@
         const offsets = isOdd
             ? [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]]
             : [[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]];
-
         const neighbors = [];
         for (let i = 0; i < offsets.length; i++) {
             const nr = row + offsets[i][0];
@@ -543,8 +532,7 @@
     function createEmptyGrid() {
         const g = [];
         for (let r = 0; r < MAX_ROWS; r++) {
-            const cols = getColsForRow(r);
-            g.push(new Array(cols).fill(null));
+            g.push(new Array(getColsForRow(r)).fill(null));
         }
         return g;
     }
@@ -560,21 +548,16 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         const sidePadding = Math.max(8, width * 0.025);
-        const playableWidth = width - sidePadding * 2;
-        bubbleDiameter = playableWidth / EVEN_COLS;
+        bubbleDiameter = (width - sidePadding * 2) / EVEN_COLS;
         bubbleRadius = bubbleDiameter / 2;
         rowHeight = bubbleDiameter * SIN_60;
-
         offsetX = sidePadding + bubbleRadius;
         offsetY = bubbleRadius + 10;
 
         cannonX = width / 2;
         cannonY = height - Math.max(54, bubbleDiameter * 1.55);
-        dangerLineY = cannonY - bubbleDiameter * 1.65;
-
         nextBubbleX = cannonX - Math.min(95, width * 0.23);
         nextBubbleY = cannonY + 10;
-
         bulletSpeed = Math.max(950, height * 1.85);
 
         if (activeBubble && gameState === STATES.AIMING) {
@@ -586,21 +569,16 @@
     function updateHUD() {
         hudScoreEl.textContent = score.toLocaleString();
         hudBestEl.textContent = highScore.toLocaleString();
+        hudLevelEl.textContent = currentLevel;
+        hudAmmoEl.textContent = ammoLeft;
         menuHighScoreEl.textContent = highScore.toLocaleString();
 
-        const remaining = SHOTS_PER_DROP - shotsWithoutPop;
-        shotPipsEl.innerHTML = '';
-        for (let i = 0; i < SHOTS_PER_DROP; i++) {
-            const pip = document.createElement('span');
-            const isActive = i < remaining;
-            let colorClass = 'bg-slate-700';
-            if (isActive) {
-                if (remaining <= 2) colorClass = 'bg-rose-500 shadow-[0_0_6px_#f43f5e]';
-                else if (remaining <= 4) colorClass = 'bg-amber-400';
-                else colorClass = 'bg-emerald-400';
-            }
-            pip.className = `w-2 h-2 rounded-full transition-all duration-200 ${colorClass}`;
-            shotPipsEl.appendChild(pip);
+        if (ammoLeft <= 5) {
+            ammoBoxEl.className = 'bg-rose-950/90 border border-rose-500 rounded-xl px-2.5 py-1 min-w-[66px] text-center animate-pulse';
+            hudAmmoEl.className = 'text-sm sm:text-base font-bold text-rose-300 leading-tight tabular-nums';
+        } else {
+            ammoBoxEl.className = 'bg-slate-900/90 border border-rose-500/30 rounded-xl px-2.5 py-1 min-w-[66px] text-center transition-colors';
+            hudAmmoEl.className = 'text-sm sm:text-base font-bold text-rose-200 leading-tight tabular-nums';
         }
     }
 
@@ -632,7 +610,7 @@
 
     function spawnBubbleInCannon(colorId) {
         activeBubble = {
-            colorId: colorId,
+            colorId,
             x: cannonX,
             y: cannonY,
             vx: 0,
@@ -640,32 +618,41 @@
         };
     }
 
-    function startNewGame() {
+    function startNewGame(keepScore = false) {
         sound.init();
+        if (!keepScore) {
+            score = 0;
+            currentLevel = 1;
+        }
+        setupLevel(currentLevel);
+    }
+
+    function setupLevel(level) {
         grid = createEmptyGrid();
         particles = [];
         fallingBubbles = [];
         floatingTexts = [];
-
-        score = 0;
-        comboCount = 0;
-        shotsWithoutPop = 0;
         aimAngle = 0;
+        comboCount = 0;
         screenShake = 0;
 
-        const numColors = BUBBLE_COLORS.length;
-        for (let r = 0; r < INITIAL_ROWS; r++) {
+        // Level progression: increases rows & color count while tightening ammo
+        const rowsToPopulate = Math.min(8, 3 + level);
+        const paletteCount = Math.min(BUBBLE_COLORS.length, 3 + Math.floor((level - 1) / 1));
+        ammoLeft = Math.max(16, 30 - (level - 1) * 2);
+
+        for (let r = 0; r < rowsToPopulate; r++) {
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
-                let colorId = Math.floor(Math.random() * numColors);
+                // Leave strategic gaps in higher levels for fun bank shots
+                if (level >= 3 && r === rowsToPopulate - 1 && (c === 0 || c === cols - 1)) {
+                    continue;
+                }
+                let colorId = Math.floor(Math.random() * paletteCount);
                 if (c > 0 && grid[r][c - 1] && Math.random() < 0.35) {
                     colorId = grid[r][c - 1].colorId;
                 }
-                grid[r][c] = {
-                    colorId,
-                    scale: 1,
-                    bounceOffset: 0
-                };
+                grid[r][c] = { colorId, scale: 1 };
             }
         }
 
@@ -675,6 +662,7 @@
 
         menuOverlay.classList.add('hidden');
         gameoverOverlay.classList.add('hidden');
+        winOverlay.classList.add('hidden');
         gameState = STATES.AIMING;
         updateHUD();
     }
@@ -693,10 +681,8 @@
         const rect = canvas.getBoundingClientRect();
         const px = clientX - rect.left;
         const py = clientY - rect.top;
-
         const dx = px - cannonX;
         const dy = py - cannonY;
-
         let angle = Math.atan2(dx, -dy);
         if (dy > -15) {
             angle = dx < 0 ? MIN_ANGLE : MAX_ANGLE;
@@ -705,12 +691,14 @@
     }
 
     function fireBubble() {
-        if (gameState !== STATES.AIMING || !activeBubble) return;
+        if (gameState !== STATES.AIMING || !activeBubble || ammoLeft <= 0) return;
         sound.playShoot();
         activeBubble.x = cannonX;
         activeBubble.y = cannonY;
         activeBubble.vx = Math.sin(aimAngle) * bulletSpeed;
         activeBubble.vy = -Math.cos(aimAngle) * bulletSpeed;
+        ammoLeft--;
+        updateHUD();
         gameState = STATES.SHOOTING;
     }
 
@@ -720,15 +708,13 @@
         let ry = cannonY;
         let vx = Math.sin(aimAngle);
         let vy = -Math.cos(aimAngle);
-
         const leftWall = bubbleRadius + 2;
         const rightWall = width - bubbleRadius - 2;
         const topWall = offsetY;
         const stepSize = bubbleRadius * 0.45;
-        const maxSteps = 160;
         const hitDistSq = Math.pow((bubbleRadius * 2) * 0.90, 2);
 
-        for (let step = 0; step < maxSteps; step++) {
+        for (let step = 0; step < 160; step++) {
             rx += vx * stepSize;
             ry += vy * stepSize;
 
@@ -747,7 +733,7 @@
                 break;
             }
 
-            let hitBubble = false;
+            let hit = false;
             for (let r = 0; r < MAX_ROWS; r++) {
                 const cols = getColsForRow(r);
                 for (let c = 0; c < cols; c++) {
@@ -756,51 +742,44 @@
                         const dx = rx - pos.x;
                         const dy = ry - pos.y;
                         if (dx * dx + dy * dy < hitDistSq) {
-                            hitBubble = true;
+                            hit = true;
                             break;
                         }
                     }
                 }
-                if (hitBubble) break;
+                if (hit) break;
             }
-
-            if (hitBubble) {
+            if (hit) {
                 points.push({ x: rx, y: ry });
                 break;
             }
         }
-
         return points;
     }
 
     function findNearestEmptyCell(impactX, impactY) {
         let bestCell = null;
         let bestDistSq = Infinity;
-
         for (let r = 0; r < MAX_ROWS; r++) {
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
                 if (grid[r][c] !== null) continue;
-
-                let hasAnchorNeighbor = (r === 0);
-                if (!hasAnchorNeighbor) {
+                let hasAnchor = (r === 0);
+                if (!hasAnchor) {
                     const neighbors = getHexNeighbors(r, c);
                     for (let i = 0; i < neighbors.length; i++) {
                         const n = neighbors[i];
                         if (grid[n.row][n.col] !== null) {
-                            hasAnchorNeighbor = true;
+                            hasAnchor = true;
                             break;
                         }
                     }
                 }
-
-                if (!hasAnchorNeighbor) continue;
-
+                if (!hasAnchor) continue;
                 const pos = gridToScreen(r, c);
                 const dx = impactX - pos.x;
                 const dy = impactY - pos.y;
                 const distSq = dx * dx + dy * dy;
-
                 if (distSq < bestDistSq) {
                     bestDistSq = distSq;
                     bestCell = { row: r, col: c };
@@ -820,16 +799,13 @@
         while (queue.length > 0) {
             const curr = queue.shift();
             cluster.push(curr);
-
             const neighbors = getHexNeighbors(curr.row, curr.col);
             for (let i = 0; i < neighbors.length; i++) {
                 const n = neighbors[i];
                 const key = `${n.row},${n.col}`;
-                if (!visited.has(key) && grid[n.row][n.col] !== null) {
-                    if (grid[n.row][n.col].colorId === targetColor) {
-                        visited.add(key);
-                        queue.push(n);
-                    }
+                if (!visited.has(key) && grid[n.row][n.col] !== null && grid[n.row][n.col].colorId === targetColor) {
+                    visited.add(key);
+                    queue.push(n);
                 }
             }
         }
@@ -837,36 +813,32 @@
     }
 
     function findFloatingIslands() {
-        const connectedToCeiling = new Set();
+        const connected = new Set();
         const queue = [];
-
         const topCols = getColsForRow(0);
         for (let c = 0; c < topCols; c++) {
             if (grid[0][c] !== null) {
-                const key = `0,${c}`;
-                connectedToCeiling.add(key);
+                connected.add(`0,${c}`);
                 queue.push({ row: 0, col: c });
             }
         }
-
         while (queue.length > 0) {
             const curr = queue.shift();
             const neighbors = getHexNeighbors(curr.row, curr.col);
             for (let i = 0; i < neighbors.length; i++) {
                 const n = neighbors[i];
                 const key = `${n.row},${n.col}`;
-                if (!connectedToCeiling.has(key) && grid[n.row][n.col] !== null) {
-                    connectedToCeiling.add(key);
+                if (!connected.has(key) && grid[n.row][n.col] !== null) {
+                    connected.add(key);
                     queue.push(n);
                 }
             }
         }
-
         const floaters = [];
         for (let r = 0; r < MAX_ROWS; r++) {
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
-                if (grid[r][c] !== null && !connectedToCeiling.has(`${r},${c}`)) {
+                if (grid[r][c] !== null && !connected.has(`${r},${c}`)) {
                     floaters.push({ row: r, col: c, colorId: grid[r][c].colorId });
                 }
             }
@@ -874,111 +846,25 @@
         return floaters;
     }
 
-    function shiftCeilingDown() {
-        sound.playRowShift();
-        screenShake = 8;
-
-        for (let r = MAX_ROWS - 1; r >= 1; r--) {
-            const targetCols = getColsForRow(r);
-            const sourceRow = grid[r - 1];
-            const newRow = new Array(targetCols).fill(null);
-
-            for (let c = 0; c < targetCols; c++) {
-                if (c < sourceRow.length && sourceRow[c] !== null) {
-                    newRow[c] = sourceRow[c];
-                }
-            }
-            if (sourceRow.length > targetCols && sourceRow[targetCols] !== null) {
-                for (let c = targetCols - 1; c >= 0; c--) {
-                    if (newRow[c] === null) {
-                        newRow[c] = sourceRow[targetCols];
-                        break;
-                    }
-                }
-            }
-            grid[r] = newRow;
-        }
-
-        const row0Cols = getColsForRow(0);
-        const activeColors = getActiveBoardColors();
-        const freshRow = new Array(row0Cols).fill(null);
-        for (let c = 0; c < row0Cols; c++) {
-            const colorId = activeColors[Math.floor(Math.random() * activeColors.length)];
-            freshRow[c] = { colorId, scale: 0.2, bounceOffset: 0 };
-        }
-        grid[0] = freshRow;
-    }
-
-    function evaluateBoardEndConditions() {
-        let totalBubbles = 0;
-        let crossedDanger = false;
-
+    function checkWinCondition() {
         for (let r = 0; r < MAX_ROWS; r++) {
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
-                if (grid[r][c] !== null) {
-                    totalBubbles++;
-                    const pos = gridToScreen(r, c);
-                    if (pos.y + bubbleRadius >= dangerLineY) {
-                        crossedDanger = true;
-                    }
-                }
+                if (grid[r][c] !== null) return false;
             }
         }
-
-        if (totalBubbles === 0) {
-            const clearBonus = 1000;
-            score += clearBonus;
-            saveHighScore();
-            updateHUD();
-            triggerEndScreen(true);
-            return true;
-        }
-
-        if (crossedDanger) {
-            saveHighScore();
-            updateHUD();
-            triggerEndScreen(false);
-            return true;
-        }
-
-        return false;
-    }
-
-    function triggerEndScreen(isWin) {
-        gameState = STATES.GAME_OVER;
-        sound.playGameOver(isWin);
-
-        if (isWin) {
-            endBadgeEl.textContent = 'Board Cleared! +1,000 Bonus';
-            endBadgeEl.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-            endTitleEl.textContent = 'VICTORY!';
-        } else {
-            endBadgeEl.textContent = 'Danger Line Crossed';
-            endBadgeEl.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-rose-500/20 text-rose-300 border border-rose-500/30';
-            endTitleEl.textContent = 'GAME OVER';
-        }
-
-        endScoreEl.textContent = score.toLocaleString();
-        endBestEl.textContent = highScore.toLocaleString();
-        gameoverOverlay.classList.remove('hidden');
+        return true;
     }
 
     function resolveImpact(impactX, impactY) {
         gameState = STATES.RESOLVING;
-
         const cell = findNearestEmptyCell(impactX, impactY);
         if (!cell) {
-            triggerEndScreen(false);
+            triggerEndScreen('Board Overflowed');
             return;
         }
 
-        const snappedColor = activeBubble.colorId;
-        grid[cell.row][cell.col] = {
-            colorId: snappedColor,
-            scale: 1.25,
-            bounceOffset: 0
-        };
+        grid[cell.row][cell.col] = { colorId: activeBubble.colorId, scale: 1.25 };
         activeBubble = null;
         sound.playSnap();
 
@@ -989,21 +875,14 @@
             }
         });
 
-        const matchedCluster = findMatchingCluster(cell.row, cell.col);
-        let poppedAny = false;
-
-        if (matchedCluster.length >= 3) {
-            poppedAny = true;
+        const matched = findMatchingCluster(cell.row, cell.col);
+        if (matched.length >= 3) {
             comboCount++;
-            shotsWithoutPop = 0;
-
-            const basePointsPerBubble = 30;
-            const matchPoints = matchedCluster.length * basePointsPerBubble * comboCount;
+            const matchPoints = matched.length * 30 * comboCount;
             score += matchPoints;
-
             let sumX = 0, sumY = 0;
 
-            matchedCluster.forEach((item, idx) => {
+            matched.forEach((item, idx) => {
                 const pos = gridToScreen(item.row, item.col);
                 sumX += pos.x;
                 sumY += pos.y;
@@ -1012,32 +891,28 @@
                 grid[item.row][item.col] = null;
             });
 
-            const centerX = sumX / matchedCluster.length;
-            const centerY = sumY / matchedCluster.length;
             const label = comboCount > 1 ? `+${matchPoints} (${comboCount}x!)` : `+${matchPoints}`;
-            spawnFloatingText(centerX, centerY, label, '#fde047');
-            screenShake = Math.min(10, 3 + matchedCluster.length * 0.8);
+            spawnFloatingText(sumX / matched.length, sumY / matched.length, label, '#fde047');
+            screenShake = Math.min(10, 3 + matched.length * 0.8);
 
             const floaters = findFloatingIslands();
             if (floaters.length > 0) {
                 const floaterPoints = floaters.length * 100;
                 score += floaterPoints;
                 sound.playDropCluster(floaters.length);
-
                 let fSumX = 0, fSumY = 0;
+
                 floaters.forEach(f => {
                     const pos = gridToScreen(f.row, f.col);
                     fSumX += pos.x;
                     fSumY += pos.y;
                     grid[f.row][f.col] = null;
-
                     fallingBubbles.push({
                         x: pos.x,
                         y: pos.y,
                         vx: (Math.random() - 0.5) * 180,
                         vy: -120 - Math.random() * 90,
-                        colorId: f.colorId,
-                        alpha: 1
+                        colorId: f.colorId
                     });
                 });
 
@@ -1050,19 +925,19 @@
             }
         } else {
             comboCount = 0;
-            shotsWithoutPop++;
         }
 
         saveHighScore();
         updateHUD();
 
-        if (evaluateBoardEndConditions()) return;
+        if (checkWinCondition()) {
+            triggerWinScreen();
+            return;
+        }
 
-        if (!poppedAny && shotsWithoutPop >= SHOTS_PER_DROP) {
-            shotsWithoutPop = 0;
-            shiftCeilingDown();
-            updateHUD();
-            if (evaluateBoardEndConditions()) return;
+        if (ammoLeft <= 0) {
+            triggerEndScreen('Out of Ammo');
+            return;
         }
 
         const validColors = getActiveBoardColors();
@@ -1070,6 +945,33 @@
         nextColorId = pickSmartColor(true);
         spawnBubbleInCannon(launchColor);
         gameState = STATES.AIMING;
+    }
+
+    function triggerWinScreen() {
+        gameState = STATES.LEVEL_WIN;
+        const ammoBonus = ammoLeft * 50;
+        score += ammoBonus;
+        saveHighScore();
+        updateHUD();
+        sound.playGameOver(true);
+
+        winTitleEl.textContent = `LEVEL ${currentLevel} COMPLETE!`;
+        winScoreEl.textContent = score.toLocaleString();
+        winAmmoBonusEl.textContent = `+${ammoBonus.toLocaleString()}`;
+        winOverlay.classList.remove('hidden');
+    }
+
+    function triggerEndScreen(reason) {
+        gameState = STATES.GAME_OVER;
+        saveHighScore();
+        updateHUD();
+        sound.playGameOver(false);
+
+        endTitleEl.textContent = 'GAME OVER';
+        endBadgeEl.textContent = reason;
+        endScoreEl.textContent = score.toLocaleString();
+        endBestEl.textContent = highScore.toLocaleString();
+        gameoverOverlay.classList.remove('hidden');
     }
 
     function spawnPopParticles(x, y, colorId, count) {
@@ -1117,7 +1019,6 @@
         if (screenShake > 0) {
             screenShake = Math.max(0, screenShake - dt * 35);
         }
-
         if (swapAnimProgress > 0) {
             swapAnimProgress = Math.max(0, swapAnimProgress - dt * 5);
         }
@@ -1176,7 +1077,6 @@
                     }
                     if (collided) break;
                 }
-
                 if (collided) {
                     resolveImpact(activeBubble.x, activeBubble.y);
                     break;
@@ -1221,7 +1121,7 @@
     }
 
     function drawBubble(x, y, radius, colorId, scale = 1, alpha = 1) {
-        const theme = BUBBLE_COLORS[colorId] || BUBBLE_COLORS[0];
+        const theme = BUBBLE_COLORS[colorId % BUBBLE_COLORS.length] || BUBBLE_COLORS[0];
         const r = radius * scale;
         if (r <= 1) return;
 
@@ -1259,7 +1159,7 @@
         ctx.restore();
     }
 
-    function drawBackgroundAndDangerLine(timeSec) {
+    function drawBackground() {
         ctx.save();
         ctx.strokeStyle = 'rgba(99, 102, 241, 0.06)';
         ctx.lineWidth = 1;
@@ -1267,7 +1167,7 @@
             const cols = getColsForRow(r);
             for (let c = 0; c < cols; c++) {
                 const pos = gridToScreen(r, c);
-                if (pos.y < dangerLineY) {
+                if (pos.y < cannonY - bubbleDiameter * 1.4) {
                     ctx.beginPath();
                     ctx.arc(pos.x, pos.y, bubbleRadius * 0.85, 0, Math.PI * 2);
                     ctx.stroke();
@@ -1282,32 +1182,14 @@
         topBarGrad.addColorStop(1, 'rgba(99, 102, 241, 0.2)');
         ctx.fillStyle = topBarGrad;
         ctx.fillRect(0, 0, width, 5);
-
-        const pulse = 0.45 + 0.35 * Math.sin(timeSec * 4.5);
-        ctx.save();
-        ctx.strokeStyle = `rgba(244, 63, 94, ${pulse})`;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8, 6]);
-        ctx.lineDashOffset = -timeSec * 24;
-        ctx.beginPath();
-        ctx.moveTo(12, dangerLineY);
-        ctx.lineTo(width - 12, dangerLineY);
-        ctx.stroke();
-
-        ctx.fillStyle = `rgba(251, 113, 133, ${pulse * 0.85})`;
-        ctx.font = '600 10px Inter, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText('DANGER LINE', width - 14, dangerLineY - 5);
-        ctx.restore();
     }
 
     function drawAimingGuide(timeSec) {
         if (gameState !== STATES.AIMING || !activeBubble) return;
-
         const points = computeAimTrajectory();
         if (points.length < 2) return;
 
-        const theme = BUBBLE_COLORS[activeBubble.colorId];
+        const theme = BUBBLE_COLORS[activeBubble.colorId % BUBBLE_COLORS.length];
 
         ctx.save();
         ctx.strokeStyle = theme.glow;
@@ -1340,6 +1222,7 @@
     }
 
     function drawCannonAndQueue() {
+        // Next-Bubble Queue Pedestal
         ctx.save();
         ctx.beginPath();
         ctx.arc(nextBubbleX, nextBubbleY, bubbleRadius * 0.92, 0, Math.PI * 2);
@@ -1358,6 +1241,7 @@
         drawBubble(nextBubbleX, nextBubbleY, bubbleRadius, nextColorId, nextScale, 1);
         ctx.restore();
 
+        // Rotating Cannon Launcher
         ctx.save();
         ctx.translate(cannonX, cannonY);
 
@@ -1419,7 +1303,7 @@
             ctx.translate(sx, sy);
         }
 
-        drawBackgroundAndDangerLine(timeSec);
+        drawBackground();
 
         for (let r = 0; r < MAX_ROWS; r++) {
             const cols = getColsForRow(r);
@@ -1480,10 +1364,8 @@
         if (!lastTimestamp) lastTimestamp = timestamp;
         const dt = Math.min(0.05, (timestamp - lastTimestamp) / 1000);
         lastTimestamp = timestamp;
-
         update(dt);
         render(timestamp);
-
         requestAnimationFrame(gameLoop);
     }
 
@@ -1491,13 +1373,8 @@
         const rect = canvas.getBoundingClientRect();
         const px = clientX - rect.left;
         const py = clientY - rect.top;
-
-        const distNext = Math.hypot(px - nextBubbleX, py - nextBubbleY);
-        if (distNext <= bubbleRadius * 1.45) return true;
-
-        const distCannon = Math.hypot(px - cannonX, py - cannonY);
-        if (distCannon <= bubbleRadius * 1.45) return true;
-
+        if (Math.hypot(px - nextBubbleX, py - nextBubbleY) <= bubbleRadius * 1.45) return true;
+        if (Math.hypot(px - cannonX, py - cannonY) <= bubbleRadius * 1.45) return true;
         return false;
     }
 
@@ -1505,12 +1382,10 @@
         if (gameState !== STATES.AIMING) return;
         e.preventDefault();
         sound.init();
-
         if (isTapOnCannonOrNext(e.clientX, e.clientY)) {
             swapActiveAndNext();
             return;
         }
-
         isPointerDown = true;
         updateAimFromClientCoords(e.clientX, e.clientY);
     });
@@ -1533,31 +1408,27 @@
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') {
             e.preventDefault();
-            if (gameState === STATES.AIMING) {
-                swapActiveAndNext();
-            }
+            if (gameState === STATES.AIMING) swapActiveAndNext();
         } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
-            if (gameState === STATES.AIMING) {
-                aimAngle = Math.max(MIN_ANGLE, aimAngle - 0.06);
-            }
+            if (gameState === STATES.AIMING) aimAngle = Math.max(MIN_ANGLE, aimAngle - 0.06);
         } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
-            if (gameState === STATES.AIMING) {
-                aimAngle = Math.min(MAX_ANGLE, aimAngle + 0.06);
-            }
+            if (gameState === STATES.AIMING) aimAngle = Math.min(MAX_ANGLE, aimAngle + 0.06);
         } else if (e.code === 'ArrowUp' || e.code === 'Enter') {
-            if (gameState === STATES.AIMING) {
-                fireBubble();
-            }
+            if (gameState === STATES.AIMING) fireBubble();
         }
     });
 
-    btnPlay.addEventListener('click', startNewGame);
-    btnRestart.addEventListener('click', startNewGame);
+    btnPlay.addEventListener('click', () => startNewGame(false));
+    btnRestart.addEventListener('click', () => startNewGame(false));
+    btnNextLevel.addEventListener('click', () => {
+        currentLevel++;
+        winOverlay.classList.add('hidden');
+        setupLevel(currentLevel);
+    });
     btnSwapHud.addEventListener('click', () => {
         sound.init();
         swapActiveAndNext();
     });
-
     btnMute.addEventListener('click', () => {
         const isMuted = sound.toggleMute();
         iconSoundOn.classList.toggle('hidden', isMuted);
@@ -1576,3 +1447,4 @@
 </script>
 </body>
 </html>
+```
